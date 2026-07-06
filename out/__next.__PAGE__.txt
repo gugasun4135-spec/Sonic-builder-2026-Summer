@@ -1,0 +1,5 @@
+1:"$Sreact.fragment"
+2:I[484,[],"OutletBoundary"]
+3:"$Sreact.suspense"
+0:{"rsc":["$","$1","c",{"children":[["$","main",null,{"className":"flex min-h-screen items-center justify-center p-6","children":[["$","div",null,{"className":"quest-panel rounded-[2rem] p-6 text-center","children":[["$","p",null,{"className":"text-sm font-black text-[#1167D8]","children":"振予 Builder Quest"}],["$","h1",null,{"className":"mt-2 text-3xl font-black","children":"正在进入暑假闯关基地"}],["$","a",null,{"className":"mt-5 inline-flex rounded-3xl border-4 border-[#18324A] bg-[#FF9F2E] px-6 py-4 text-xl font-black text-white","href":"/zhenyu-builder-quest/home/","children":"进入游戏"}]]}],["$","meta",null,{"httpEquiv":"refresh","content":"0;url=/zhenyu-builder-quest/home/"}]]}],null,["$","$L2",null,{"children":["$","$3",null,{"name":"Next.MetadataOutlet","children":"$@4"}]}]]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"ODwm7htw1CevceY9dwAqp"}
+4:null

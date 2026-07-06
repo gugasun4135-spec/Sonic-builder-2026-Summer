@@ -1,0 +1,5 @@
+.next
+.npm-cache
+.vercel
+.vercel-home
+node_modules

@@ -1,0 +1,6 @@
+1:"$Sreact.fragment"
+2:I[6058,["58","static/chunks/58-8b31b3633e9f4afa.js","177","static/chunks/app/layout-0ac0fdacc4ca495f.js"],"GameProvider"]
+3:I[7121,[],""]
+4:I[4581,[],""]
+:HL["/zhenyu-builder-quest/_next/static/css/263bc3a4a87a8ac7.css","style"]
+0:{"rsc":["$","$1","c",{"children":[[["$","link","0",{"rel":"stylesheet","href":"/zhenyu-builder-quest/_next/static/css/263bc3a4a87a8ac7.css","precedence":"next"}]],["$","html",null,{"lang":"zh-CN","children":["$","body",null,{"children":["$","$L2",null,{"children":["$","$L3",null,{"parallelRouterKey":"children","template":["$","$L4",null,{}]}]}]}]}]]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"ODwm7htw1CevceY9dwAqp"}

@@ -1,0 +1,229 @@
+"use client";
+
+import { AppShell } from "@/components/AppShell";
+import { useGame } from "@/lib/useGame";
+import { migrateGameState } from "@/lib/storage";
+import type { MapNodeStatus } from "@/lib/gameTypes";
+import type { ReactNode } from "react";
+
+export default function ParentPage() {
+  const { state, dispatch } = useGame();
+
+  function exportGame() {
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `builder-quest-${new Date().toISOString().slice(0, 10)}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function importGame(file: File) {
+    const text = await file.text();
+    dispatch({ type: "HYDRATE", state: migrateGameState(JSON.parse(text)) });
+  }
+
+  return (
+    <AppShell>
+      <section className="grid gap-4">
+        <div className="blue-title rounded-[2rem] p-5">
+          <p className="text-sm font-black text-[#FFD84D]">家长模式</p>
+          <h1 className="text-3xl font-black sm:text-5xl">控制台</h1>
+          <p className="mt-2 text-lg font-black text-white/90">当前星星：{state.player.stars}</p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {[1, 5, -1, -5].map((amount) => (
+            <button
+              key={amount}
+              type="button"
+              onClick={() => dispatch({ type: "ADD_STARS", amount })}
+              className="tap-card rounded-3xl bg-white p-5 text-xl font-black shadow-soft"
+            >
+              {amount > 0 ? "+" : ""}
+              {amount} 星
+            </button>
+          ))}
+        </div>
+
+        <section className="rounded-[2rem] border-4 border-[#18324A] bg-[#FFF5D6] p-5 shadow-[0_8px_0_rgba(24,50,74,0.16)]">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-2xl font-black">音效反馈</h2>
+              <p className="text-base font-black text-[#18324A]/70">
+                点击、完成任务、获得星星、兑换奖励都会播放轻量音效。
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => dispatch({ type: "SET_SOUND_ENABLED", enabled: !state.settings.soundEnabled })}
+              className={`tap-card rounded-3xl border-4 border-[#18324A] px-6 py-4 text-xl font-black shadow-[0_8px_0_rgba(24,50,74,0.16)] ${
+                state.settings.soundEnabled ? "bg-[#64C86B] text-white" : "bg-white text-[#18324A]"
+              }`}
+            >
+              {state.settings.soundEnabled ? "音效开启" : "音效关闭"}
+            </button>
+          </div>
+        </section>
+
+        <section className="rounded-[2rem] border-4 border-[#18324A] bg-white p-5 shadow-[0_8px_0_rgba(24,50,74,0.16)]">
+          <h2 className="mb-4 text-2xl font-black">数据与模式</h2>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <button type="button" onClick={exportGame} className="rounded-3xl border-4 border-[#18324A] bg-[#FFD84D] p-4 font-black">
+              导出游戏记录
+            </button>
+            <label className="rounded-3xl border-4 border-[#18324A] bg-[#DFF4FF] p-4 text-center font-black">
+              导入游戏记录
+              <input
+                type="file"
+                accept="application/json"
+                className="hidden"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) {
+                    void importGame(file);
+                  }
+                }}
+              />
+            </label>
+            <button
+              type="button"
+              onClick={() => dispatch({ type: "SET_DAY_MODE_LOCKED", locked: !state.settings.dayModeLocked })}
+              className="rounded-3xl border-4 border-[#18324A] bg-[#FFF5D6] p-4 font-black"
+            >
+              {state.settings.dayModeLocked ? "解除模式锁定" : "锁定今日模式"}
+            </button>
+            <button
+              type="button"
+              onClick={() => dispatch({ type: "SET_SPEECH_ENABLED", enabled: !state.settings.speechEnabled })}
+              className="rounded-3xl border-4 border-[#18324A] bg-[#64C86B] p-4 font-black text-white"
+            >
+              NPC朗读：{state.settings.speechEnabled ? "开" : "关"}
+            </button>
+          </div>
+        </section>
+
+        <Panel title="任务设置">
+          <div className="grid gap-3">
+            {state.tasks.map((task) => (
+              <div key={task.id} className="grid gap-2 rounded-3xl bg-slate-50 p-4 sm:grid-cols-[1fr_7rem]">
+                <input
+                  value={task.title}
+                  onChange={(event) =>
+                    dispatch({ type: "SET_TASK", taskId: task.id, title: event.target.value, stars: task.stars })
+                  }
+                  className="rounded-2xl border border-slate-200 px-4 py-3 text-lg font-bold"
+                />
+                <input
+                  type="number"
+                  min={0}
+                  value={task.stars}
+                  onChange={(event) =>
+                    dispatch({
+                      type: "SET_TASK",
+                      taskId: task.id,
+                      title: task.title,
+                      stars: Number(event.target.value)
+                    })
+                  }
+                  className="rounded-2xl border border-slate-200 px-4 py-3 text-lg font-bold"
+                />
+              </div>
+            ))}
+          </div>
+        </Panel>
+
+        <Panel title="怪兽控制">
+          <div className="grid gap-3">
+            {state.monsters.map((monster) => (
+              <div key={monster.id} className="grid gap-2 rounded-3xl bg-slate-50 p-4 sm:grid-cols-[1fr_8rem_8rem]">
+                <div>
+                  <p className="text-lg font-black">{monster.name}</p>
+                  <p className="text-sm font-bold text-slate-500">
+                    HP {monster.hp}/{monster.maxHp}
+                  </p>
+                </div>
+                <input
+                  type="number"
+                  min={0}
+                  value={monster.hp}
+                  onChange={(event) =>
+                    dispatch({ type: "SET_MONSTER_HP", monsterId: monster.id, hp: Number(event.target.value) })
+                  }
+                  className="rounded-2xl border border-slate-200 px-4 py-3 text-lg font-bold"
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    dispatch({ type: "SET_MONSTER_DEFEATED", monsterId: monster.id, defeated: !monster.defeated })
+                  }
+                  className="rounded-2xl bg-slate-900 px-4 py-3 font-black text-white"
+                >
+                  {monster.defeated ? "恢复" : "击败"}
+                </button>
+              </div>
+            ))}
+          </div>
+        </Panel>
+
+        <Panel title="地图控制">
+          <div className="grid gap-3">
+            {state.map.map((node) => (
+              <div key={node.id} className="grid gap-2 rounded-3xl bg-slate-50 p-4 sm:grid-cols-[1fr_10rem]">
+                <p className="text-lg font-black">{node.name}</p>
+                <select
+                  value={node.status}
+                  onChange={(event) =>
+                    dispatch({
+                      type: "SET_MAP_NODE_STATUS",
+                      nodeId: node.id,
+                      status: event.target.value as MapNodeStatus
+                    })
+                  }
+                  className="rounded-2xl border border-slate-200 px-4 py-3 text-lg font-bold"
+                >
+                  <option value="locked">未解锁</option>
+                  <option value="active">进行中</option>
+                  <option value="submitted">等待确认</option>
+                  <option value="done">已完成</option>
+                  <option value="ongoing">长期支线</option>
+                </select>
+                {node.status === "submitted" ? (
+                  <button
+                    type="button"
+                    onClick={() => dispatch({ type: "CONFIRM_MAP_NODE", nodeId: node.id })}
+                    className="rounded-2xl bg-[#64C86B] px-4 py-3 font-black text-white"
+                  >
+                    确认完成
+                  </button>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        </Panel>
+
+        <button
+          type="button"
+          onClick={() => {
+            if (window.confirm("确定重置全部进度吗？")) {
+              dispatch({ type: "RESET_GAME" });
+            }
+          }}
+          className="tap-card rounded-[2rem] bg-rose-600 p-5 text-2xl font-black text-white shadow-soft"
+        >
+          重置全部进度
+        </button>
+      </section>
+    </AppShell>
+  );
+}
+
+function Panel({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="rounded-[2rem] bg-white p-5 shadow-soft">
+      <h2 className="mb-4 text-2xl font-black">{title}</h2>
+      {children}
+    </section>
+  );
+}
