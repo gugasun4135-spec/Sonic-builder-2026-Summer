@@ -1,2 +1,2 @@
-:HL["/zhenyu-builder-quest/_next/static/css/263bc3a4a87a8ac7.css","style"]
-0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"guide","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"ODwm7htw1CevceY9dwAqp"}
+:HL["/Sonic-builder-2026-Summer/_next/static/css/263bc3a4a87a8ac7.css","style"]
+0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"guide","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"S2XF0-Jbf-0sPWF9IuYk7"}
