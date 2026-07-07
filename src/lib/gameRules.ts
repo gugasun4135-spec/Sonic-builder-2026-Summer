@@ -11,7 +11,7 @@ export const seasonRequirements = [
   { id: "checkInDays", label: "上线天数", target: 20 },
   { id: "englishStreakTasks", label: "英语不断线", target: 20 },
   { id: "baseResetTasks", label: "基地复位", target: 20 },
-  { id: "completedMainNodes", label: "主线节点", target: 2 }
+  { id: "completedMainNodes", label: "主线节点", target: 8 }
 ] as const;
 
 function cloneDefaultState(): GameState {
