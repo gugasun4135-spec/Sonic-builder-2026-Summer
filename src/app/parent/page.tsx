@@ -1,10 +1,25 @@
 "use client";
 
 import { AppShell } from "@/components/AppShell";
+import { seasonRequirements } from "@/lib/gameRules";
 import { useGame } from "@/lib/useGame";
 import { migrateGameState } from "@/lib/storage";
-import type { MapNodeStatus } from "@/lib/gameTypes";
+import type { MapNodeStatus, ProgressStats } from "@/lib/gameTypes";
 import type { ReactNode } from "react";
+
+type EditableProgressStat = keyof Omit<ProgressStats, "countedDates">;
+
+const editableProgressStats: Array<{
+  id: EditableProgressStat;
+  label: string;
+  target: number;
+}> = seasonRequirements
+  .filter((item) => item.id !== "stars")
+  .map((item) => ({
+    id: item.id,
+    label: item.label,
+    target: item.target
+  }));
 
 export default function ParentPage() {
   const { state, dispatch } = useGame();
@@ -131,6 +146,71 @@ export default function ParentPage() {
                 />
               </div>
             ))}
+          </div>
+        </Panel>
+
+        <Panel title="赛季目标数据">
+          <div className="grid gap-3 sm:grid-cols-2">
+            {editableProgressStats.map((item) => {
+              const value = state.progressStats[item.id];
+              return (
+                <div key={item.id} className="rounded-3xl bg-slate-50 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-lg font-black">{item.label}</p>
+                      <p className="text-sm font-bold text-slate-500">
+                        目标 {item.target}，当前 {value}/{item.target}
+                      </p>
+                    </div>
+                    <input
+                      type="number"
+                      min={0}
+                      max={item.target}
+                      value={value}
+                      onChange={(event) =>
+                        dispatch({
+                          type: "SET_PROGRESS_STAT",
+                          stat: item.id,
+                          value: Number(event.target.value)
+                        })
+                      }
+                      className="w-24 rounded-2xl border border-slate-200 px-4 py-3 text-lg font-black"
+                    />
+                  </div>
+                  <div className="mt-3 grid grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        dispatch({ type: "SET_PROGRESS_STAT", stat: item.id, value: Math.max(0, value - 1) })
+                      }
+                      className="rounded-2xl border-4 border-[#18324A] bg-white px-3 py-2 font-black"
+                    >
+                      -1
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => dispatch({ type: "SET_PROGRESS_STAT", stat: item.id, value: item.target })}
+                      className="rounded-2xl border-4 border-[#18324A] bg-[#FFD84D] px-3 py-2 font-black"
+                    >
+                      满格
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        dispatch({
+                          type: "SET_PROGRESS_STAT",
+                          stat: item.id,
+                          value: Math.min(item.target, value + 1)
+                        })
+                      }
+                      className="rounded-2xl border-4 border-[#18324A] bg-[#64C86B] px-3 py-2 font-black text-white"
+                    >
+                      +1
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </Panel>
 

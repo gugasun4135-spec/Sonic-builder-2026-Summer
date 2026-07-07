@@ -21,11 +21,20 @@ function mergeRewards(defaults: GameState["rewards"], saved: GameState["rewards"
   });
 }
 
+function normalizeMapProgress(map: GameState["map"]): GameState["map"] {
+  return map.map((node) =>
+    node.id === "swim-0705" || node.id === "base-build" ? { ...node, status: "done" } : node
+  );
+}
+
 export function migrateGameState(oldState: unknown): GameState {
   const saved = (oldState && typeof oldState === "object" ? oldState : {}) as Partial<GameState> & {
     version?: number;
     soundEnabled?: boolean;
   };
+
+  const map = normalizeMapProgress(mergeById(defaultGameState.map, saved.map));
+  const completedMainNodes = map.filter((node) => !node.sideQuest && node.status === "done").length;
 
   return {
     ...defaultGameState,
@@ -39,7 +48,7 @@ export function migrateGameState(oldState: unknown): GameState {
     tasks: mergeById(defaultGameState.tasks, saved.tasks),
     rewards: mergeRewards(defaultGameState.rewards, saved.rewards),
     monsters: mergeById(defaultGameState.monsters, saved.monsters),
-    map: mergeById(defaultGameState.map, saved.map),
+    map,
     logs: Array.isArray(saved.logs) ? saved.logs : [],
     settings: {
       ...defaultGameState.settings,
@@ -49,6 +58,7 @@ export function migrateGameState(oldState: unknown): GameState {
     progressStats: {
       ...defaultGameState.progressStats,
       ...saved.progressStats,
+      completedMainNodes,
       countedDates: {
         ...defaultGameState.progressStats.countedDates,
         ...saved.progressStats?.countedDates

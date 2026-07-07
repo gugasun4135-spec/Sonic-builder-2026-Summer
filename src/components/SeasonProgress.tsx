@@ -1,15 +1,7 @@
 "use client";
 
-import { getWatchMissingRequirements } from "@/lib/gameRules";
+import { getWatchMissingRequirements, seasonRequirements } from "@/lib/gameRules";
 import type { GameState } from "@/lib/gameTypes";
-
-const seasonItems = [
-  { id: "stars", label: "当前星星", target: 100 },
-  { id: "checkInDays", label: "上线天数", target: 10 },
-  { id: "englishStreakTasks", label: "英语不断线", target: 5 },
-  { id: "baseResetTasks", label: "基地复位", target: 5 },
-  { id: "completedMainNodes", label: "主线节点", target: 2 }
-];
 
 export function SeasonProgress({ state }: { state: GameState }) {
   const missing = getWatchMissingRequirements(state);
@@ -35,7 +27,7 @@ export function SeasonProgress({ state }: { state: GameState }) {
         </span>
       </div>
       <div className="mt-3 grid gap-2 sm:grid-cols-5">
-        {seasonItems.map((item) => {
+        {seasonRequirements.map((item) => {
           const current = values[item.id] ?? 0;
           const percent = Math.min(100, (current / item.target) * 100);
           return (

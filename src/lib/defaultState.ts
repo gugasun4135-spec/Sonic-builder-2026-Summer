@@ -56,7 +56,7 @@ export const defaultGameState: GameState = {
       name: "7.5 海豚闪电杯",
       subtitle: "50米自由泳冲刺赛",
       date: "7.5",
-      status: "active",
+      status: "done",
       icon: "dolphin"
     },
     {
@@ -64,7 +64,7 @@ export const defaultGameState: GameState = {
       order: 2,
       name: "基地建造计划",
       subtitle: "整理任务基地，开启暑假冒险",
-      status: "active",
+      status: "done",
       icon: "base"
     },
     {

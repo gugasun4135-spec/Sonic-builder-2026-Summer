@@ -121,6 +121,7 @@ export type GameAction =
   | { type: "TOGGLE_REVIVE_CARD" }
   | { type: "TOGGLE_BREAKDOWN_CARD" }
   | { type: "SET_TASK"; taskId: string; title: string; stars: number }
+  | { type: "SET_PROGRESS_STAT"; stat: keyof Omit<ProgressStats, "countedDates">; value: number }
   | { type: "SET_MONSTER_HP"; monsterId: string; hp: number }
   | { type: "SET_MONSTER_DEFEATED"; monsterId: string; defeated: boolean }
   | { type: "SET_MAP_NODE_STATUS"; nodeId: string; status: MapNodeStatus }

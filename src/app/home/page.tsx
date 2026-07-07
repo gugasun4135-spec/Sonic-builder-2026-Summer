@@ -11,6 +11,24 @@ import { TaskCard } from "@/components/TaskCard";
 import { ToolPanel } from "@/components/ToolPanel";
 import { useSound } from "@/lib/useSound";
 import { useGame } from "@/lib/useGame";
+import type { MapNode } from "@/lib/gameTypes";
+
+function getTodayQuests(map: MapNode[]) {
+  const handwriting = map.find((node) => node.id === "handwriting");
+  const taekwondo = map.find((node) => node.id === "taekwondo-tower");
+  const day = new Date().getDay();
+  const quests = handwriting ? [handwriting] : [];
+
+  if ((day === 4 || day === 5) && taekwondo) {
+    quests.push({
+      ...taekwondo,
+      name: "跆拳道能量塔",
+      subtitle: "周四 / 周五加练｜练体能，准备考级"
+    });
+  }
+
+  return quests.length > 0 ? quests : map.filter((node) => node.status === "active" || node.status === "ongoing");
+}
 
 export default function HomePage() {
   const { state, dispatch } = useGame();
@@ -20,7 +38,7 @@ export default function HomePage() {
   const allSmallDefeated = smallMonsters.every((monster) => monster.defeated);
   const activeMonster = allSmallDefeated ? boss : smallMonsters.find((monster) => !monster.defeated);
   const firstReward = state.rewards.find((reward) => !reward.claimed) ?? state.rewards[0];
-  const todayQuest = state.map.find((node) => node.id === "swim-0705") ?? state.map[0];
+  const todayQuests = getTodayQuests(state.map);
 
   return (
     <AppShell>
@@ -44,10 +62,14 @@ export default function HomePage() {
 
         <div className="quest-panel rounded-[2rem] p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
+            <div className="grid gap-3">
               <p className="text-sm font-black text-[#1167D8]">今日主线</p>
-              <h2 className="text-3xl font-black">{todayQuest.name}</h2>
-              <p className="mt-1 text-lg font-black text-[#18324A]/75">{todayQuest.subtitle}</p>
+              {todayQuests.map((quest) => (
+                <div key={quest.id} className="rounded-3xl border-4 border-[#18324A] bg-white/75 px-4 py-3">
+                  <h2 className="text-3xl font-black">{quest.name}</h2>
+                  <p className="mt-1 text-lg font-black text-[#18324A]/75">{quest.subtitle}</p>
+                </div>
+              ))}
             </div>
             <a
               href="#today-challenge"

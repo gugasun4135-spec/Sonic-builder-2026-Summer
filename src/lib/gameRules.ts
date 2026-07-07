@@ -6,6 +6,14 @@ const dailyBonusStars = 3;
 const dailyBonusDamage = 8;
 const today = () => new Date().toISOString().slice(0, 10);
 
+export const seasonRequirements = [
+  { id: "stars", label: "当前星星", target: 100 },
+  { id: "checkInDays", label: "上线天数", target: 20 },
+  { id: "englishStreakTasks", label: "英语不断线", target: 20 },
+  { id: "baseResetTasks", label: "基地复位", target: 20 },
+  { id: "completedMainNodes", label: "主线节点", target: 2 }
+] as const;
+
 function cloneDefaultState(): GameState {
   return JSON.parse(JSON.stringify(defaultGameState)) as GameState;
 }
@@ -114,15 +122,12 @@ function addTaskStats(state: GameState, taskType: string): GameState {
 }
 
 export function getWatchMissingRequirements(state: GameState) {
-  const requirements = [
-    { id: "stars", label: "星星", current: state.player.stars, target: 100 },
-    { id: "checkInDays", label: "上线天数", current: state.progressStats.checkInDays, target: 10 },
-    { id: "englishStreakTasks", label: "英语不断线", current: state.progressStats.englishStreakTasks, target: 5 },
-    { id: "baseResetTasks", label: "基地复位", current: state.progressStats.baseResetTasks, target: 5 },
-    { id: "completedMainNodes", label: "主线节点", current: state.progressStats.completedMainNodes, target: 2 }
-  ];
-
-  return requirements.filter((item) => item.current < item.target);
+  return seasonRequirements
+    .map((item) => ({
+      ...item,
+      current: item.id === "stars" ? state.player.stars : state.progressStats[item.id]
+    }))
+    .filter((item) => item.current < item.target);
 }
 
 export function canClaimReward(state: GameState, rewardId: string) {
@@ -371,6 +376,15 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         )
       };
 
+    case "SET_PROGRESS_STAT":
+      return {
+        ...state,
+        progressStats: {
+          ...state.progressStats,
+          [action.stat]: Math.max(0, action.value)
+        }
+      };
+
     case "SET_MONSTER_HP":
       return {
         ...state,
@@ -392,11 +406,17 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       };
 
     case "SET_MAP_NODE_STATUS":
+      const map = state.map.map((node) =>
+        node.id === action.nodeId ? { ...node, status: action.status } : node
+      );
+
       return {
         ...state,
-        map: state.map.map((node) =>
-          node.id === action.nodeId ? { ...node, status: action.status } : node
-        )
+        map,
+        progressStats: {
+          ...state.progressStats,
+          completedMainNodes: map.filter((node) => !node.sideQuest && node.status === "done").length
+        }
       };
 
     case "RESET_GAME":
