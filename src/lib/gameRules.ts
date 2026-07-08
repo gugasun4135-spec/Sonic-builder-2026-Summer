@@ -4,7 +4,11 @@ import type { GameAction, GameState, MapNode, Monster } from "./gameTypes";
 const taskDamage = 4;
 const dailyBonusStars = 3;
 const dailyBonusDamage = 8;
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => {
+  const now = new Date();
+  const localTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+  return localTime.toISOString().slice(0, 10);
+};
 
 export const seasonRequirements = [
   { id: "stars", label: "当前星星", target: 100 },

@@ -10,8 +10,7 @@ const navItems = [
   { href: "/tasks", label: "任务", icon: "✓" },
   { href: "/rewards", label: "奖励", icon: "◆" },
   { href: "/monsters", label: "怪兽", icon: "⚔" },
-  { href: "/map", label: "地图", icon: "⌾" },
-  { href: "/parent", label: "家长", icon: "⚙" }
+  { href: "/map", label: "地图", icon: "⌾" }
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -22,7 +21,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 pb-24 pt-4 sm:px-6">
       <div className="flex-1">{children}</div>
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t-4 border-[#18324A] bg-[#FFF5D6]/95 px-2 py-2 shadow-[0_-8px_28px_rgba(24,50,74,0.18)] backdrop-blur">
-        <div className="mx-auto grid max-w-5xl grid-cols-6 gap-1">
+        <div className="mx-auto grid max-w-5xl grid-cols-5 gap-1">
           {navItems.map((item) => {
             const active = pathname === item.href;
             return (

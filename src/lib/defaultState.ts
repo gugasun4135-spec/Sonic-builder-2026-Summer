@@ -1,6 +1,10 @@
 import type { GameState } from "./gameTypes";
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => {
+  const now = new Date();
+  const localTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+  return localTime.toISOString().slice(0, 10);
+};
 
 export const monsterForms = {
   1: "基础形态",

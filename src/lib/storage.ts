@@ -3,6 +3,11 @@ import type { GameState } from "./gameTypes";
 
 export const storageKey = "bq_game_state_v1";
 const legacyKeys = ["bq_game_state"];
+const today = () => {
+  const now = new Date();
+  const localTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+  return localTime.toISOString().slice(0, 10);
+};
 
 function mergeById<T extends { id: string }>(defaults: T[], saved: T[] | undefined): T[] {
   return defaults.map((item) => {
@@ -27,6 +32,27 @@ function normalizeMapProgress(map: GameState["map"]): GameState["map"] {
   );
 }
 
+function normalizeTasksForToday(tasks: GameState["tasks"]): {
+  tasks: GameState["tasks"];
+  dayClearedReset: boolean;
+} {
+  const date = today();
+  const hasOldTask = tasks.some((task) => task.date !== date);
+
+  if (!hasOldTask) {
+    return { tasks, dayClearedReset: false };
+  }
+
+  return {
+    tasks: tasks.map((task) => ({
+      ...task,
+      completed: false,
+      date
+    })),
+    dayClearedReset: true
+  };
+}
+
 export function migrateGameState(oldState: unknown): GameState {
   const saved = (oldState && typeof oldState === "object" ? oldState : {}) as Partial<GameState> & {
     version?: number;
@@ -35,6 +61,7 @@ export function migrateGameState(oldState: unknown): GameState {
 
   const map = normalizeMapProgress(mergeById(defaultGameState.map, saved.map));
   const completedMainNodes = map.filter((node) => !node.sideQuest && node.status === "done").length;
+  const normalizedTasks = normalizeTasksForToday(mergeById(defaultGameState.tasks, saved.tasks));
 
   return {
     ...defaultGameState,
@@ -45,10 +72,11 @@ export function migrateGameState(oldState: unknown): GameState {
       ...saved.player,
       name: "振予"
     },
-    tasks: mergeById(defaultGameState.tasks, saved.tasks),
+    tasks: normalizedTasks.tasks,
     rewards: mergeRewards(defaultGameState.rewards, saved.rewards),
     monsters: mergeById(defaultGameState.monsters, saved.monsters),
     map,
+    dayCleared: normalizedTasks.dayClearedReset ? false : saved.dayCleared ?? defaultGameState.dayCleared,
     logs: Array.isArray(saved.logs) ? saved.logs : [],
     settings: {
       ...defaultGameState.settings,
