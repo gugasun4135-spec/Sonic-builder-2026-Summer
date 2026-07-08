@@ -4,8 +4,9 @@ import { AppShell } from "@/components/AppShell";
 import { seasonRequirements } from "@/lib/gameRules";
 import { useGame } from "@/lib/useGame";
 import { migrateGameState } from "@/lib/storage";
+import { createSyncUrl } from "@/lib/syncState";
 import type { MapNodeStatus, ProgressStats } from "@/lib/gameTypes";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 type EditableProgressStat = keyof Omit<ProgressStats, "countedDates">;
 
@@ -23,6 +24,8 @@ const editableProgressStats: Array<{
 
 export default function ParentPage() {
   const { state, dispatch } = useGame();
+  const [syncUrl, setSyncUrl] = useState("");
+  const [syncCopied, setSyncCopied] = useState(false);
 
   function exportGame() {
     const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
@@ -37,6 +40,19 @@ export default function ParentPage() {
   async function importGame(file: File) {
     const text = await file.text();
     dispatch({ type: "HYDRATE", state: migrateGameState(JSON.parse(text)) });
+  }
+
+  async function copyPadSyncLink() {
+    const url = createSyncUrl(state);
+    setSyncUrl(url);
+    setSyncCopied(false);
+
+    try {
+      await navigator.clipboard.writeText(url);
+      setSyncCopied(true);
+    } catch {
+      setSyncCopied(false);
+    }
   }
 
   return (
@@ -117,6 +133,31 @@ export default function ParentPage() {
               NPC朗读：{state.settings.speechEnabled ? "开" : "关"}
             </button>
           </div>
+        </section>
+
+        <section className="rounded-[2rem] border-4 border-[#18324A] bg-[#DFF4FF] p-5 shadow-[0_8px_0_rgba(24,50,74,0.16)]">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 className="text-2xl font-black">同步到 Pad</h2>
+              <p className="mt-1 text-base font-black text-[#18324A]/70">
+                电脑端改完星星或进度后，复制链接发到 Pad 打开，Pad 会自动更新成这一份数据。
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void copyPadSyncLink()}
+              className="rounded-3xl border-4 border-[#18324A] bg-[#1167D8] px-6 py-4 text-xl font-black text-white"
+            >
+              {syncCopied ? "已复制" : "复制Pad同步链接"}
+            </button>
+          </div>
+          {syncUrl ? (
+            <textarea
+              readOnly
+              value={syncUrl}
+              className="mt-4 min-h-28 w-full rounded-3xl border-4 border-[#18324A] bg-white p-4 text-sm font-bold"
+            />
+          ) : null}
         </section>
 
         <Panel title="任务设置">

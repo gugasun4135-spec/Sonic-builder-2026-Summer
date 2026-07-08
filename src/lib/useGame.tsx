@@ -5,6 +5,7 @@ import type { Dispatch, ReactNode } from "react";
 import { defaultGameState } from "./defaultState";
 import { gameReducer } from "./gameRules";
 import { loadGameState, saveGameState } from "./storage";
+import { clearSyncHash, readSyncStateFromUrl } from "./syncState";
 import type { GameAction, GameState } from "./gameTypes";
 
 type GameContextValue = {
@@ -20,8 +21,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const saved = loadGameState();
+    const syncedState = readSyncStateFromUrl();
+    const saved = syncedState ?? loadGameState();
     dispatch({ type: "HYDRATE", state: saved });
+    if (syncedState) {
+      clearSyncHash();
+    }
     setReady(true);
   }, []);
 
