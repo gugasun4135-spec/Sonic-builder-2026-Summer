@@ -32,21 +32,25 @@ function normalizeMapProgress(map: GameState["map"]): GameState["map"] {
   );
 }
 
-function normalizeTasksForToday(tasks: GameState["tasks"]): {
+function normalizeTasksForToday(tasks: GameState["tasks"], logs: GameState["logs"]): {
   tasks: GameState["tasks"];
   dayClearedReset: boolean;
 } {
   const date = today();
+  const todayLog = logs.find((log) => log.date === date);
   const hasOldTask = tasks.some((task) => task.date !== date);
+  const hasUnloggedCompletedTask = tasks.some(
+    (task) => task.completed && !todayLog?.actions.includes(`完成${task.title}`)
+  );
 
-  if (!hasOldTask) {
+  if (!hasOldTask && !hasUnloggedCompletedTask) {
     return { tasks, dayClearedReset: false };
   }
 
   return {
     tasks: tasks.map((task) => ({
       ...task,
-      completed: false,
+      completed: task.date === date && todayLog?.actions.includes(`完成${task.title}`) ? task.completed : false,
       date
     })),
     dayClearedReset: true
@@ -61,7 +65,8 @@ export function migrateGameState(oldState: unknown): GameState {
 
   const map = normalizeMapProgress(mergeById(defaultGameState.map, saved.map));
   const completedMainNodes = map.filter((node) => !node.sideQuest && node.status === "done").length;
-  const normalizedTasks = normalizeTasksForToday(mergeById(defaultGameState.tasks, saved.tasks));
+  const logs = Array.isArray(saved.logs) ? saved.logs : [];
+  const normalizedTasks = normalizeTasksForToday(mergeById(defaultGameState.tasks, saved.tasks), logs);
 
   return {
     ...defaultGameState,
@@ -77,7 +82,7 @@ export function migrateGameState(oldState: unknown): GameState {
     monsters: mergeById(defaultGameState.monsters, saved.monsters),
     map,
     dayCleared: normalizedTasks.dayClearedReset ? false : saved.dayCleared ?? defaultGameState.dayCleared,
-    logs: Array.isArray(saved.logs) ? saved.logs : [],
+    logs,
     settings: {
       ...defaultGameState.settings,
       ...saved.settings,
