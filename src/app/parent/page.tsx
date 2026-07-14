@@ -6,7 +6,7 @@ import { useGame } from "@/lib/useGame";
 import { migrateGameState } from "@/lib/storage";
 import { createSyncUrl } from "@/lib/syncState";
 import type { MapNodeStatus, ProgressStats } from "@/lib/gameTypes";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 type EditableProgressStat = keyof Omit<ProgressStats, "countedDates">;
 
@@ -23,9 +23,15 @@ const editableProgressStats: Array<{
   }));
 
 export default function ParentPage() {
-  const { state, dispatch } = useGame();
+  const { state, dispatch, syncStatus } = useGame();
   const [syncUrl, setSyncUrl] = useState("");
   const [syncCopied, setSyncCopied] = useState(false);
+  const [blockedOnTouchDevice, setBlockedOnTouchDevice] = useState(false);
+
+  useEffect(() => {
+    const coarsePointer = window.matchMedia?.("(pointer: coarse)").matches ?? false;
+    setBlockedOnTouchDevice(coarsePointer || window.innerWidth < 900);
+  }, []);
 
   function exportGame() {
     const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
@@ -55,13 +61,31 @@ export default function ParentPage() {
     }
   }
 
+  if (blockedOnTouchDevice) {
+    return (
+      <AppShell>
+        <section className="grid gap-4">
+          <div className="blue-title rounded-[2rem] p-5">
+            <p className="text-sm font-black text-[#FFD84D]">家长模式</p>
+            <h1 className="text-3xl font-black sm:text-5xl">请在电脑端打开</h1>
+            <p className="mt-2 text-lg font-black text-white/90">
+              Pad 端不能调整星星。振予只能通过打卡获得星星，家长控制请回到电脑操作。
+            </p>
+          </div>
+        </section>
+      </AppShell>
+    );
+  }
+
   return (
     <AppShell>
       <section className="grid gap-4">
         <div className="blue-title rounded-[2rem] p-5">
           <p className="text-sm font-black text-[#FFD84D]">家长模式</p>
           <h1 className="text-3xl font-black sm:text-5xl">控制台</h1>
-          <p className="mt-2 text-lg font-black text-white/90">当前星星：{state.player.stars}</p>
+          <p className="mt-2 text-lg font-black text-white/90">
+            当前星星：{state.player.stars}｜同步状态：{syncStatus === "synced" ? "云端已同步" : syncStatus === "loading" ? "正在同步" : syncStatus === "error" ? "云端异常" : "本地模式"}
+          </p>
         </div>
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -140,7 +164,7 @@ export default function ParentPage() {
             <div>
               <h2 className="text-2xl font-black">同步到 Pad</h2>
               <p className="mt-1 text-base font-black text-[#18324A]/70">
-                电脑端改完星星或进度后，复制链接发到 Pad 打开，Pad 会自动更新成这一份数据。
+                推荐开启云同步后自动同步。未配置云同步时，可复制链接发到 Pad 做一次性导入。
               </p>
             </div>
             <button

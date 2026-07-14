@@ -38,6 +38,8 @@ jobs:
         run: npm run build
         env:
           NEXT_PUBLIC_BASE_PATH: /Sonic-builder-2026-Summer
+          NEXT_PUBLIC_BQ_SYNC_ENDPOINT: ${{ vars.BQ_SYNC_ENDPOINT }}
+          NEXT_PUBLIC_BQ_SYNC_TOKEN: ${{ secrets.BQ_SYNC_TOKEN }}
 
       - name: Prepare static files
         run: |
