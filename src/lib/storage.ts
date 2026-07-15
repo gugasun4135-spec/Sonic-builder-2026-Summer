@@ -126,5 +126,9 @@ export function saveGameState(state: GameState) {
     return;
   }
 
-  window.localStorage.setItem(storageKey, JSON.stringify(state));
+  try {
+    window.localStorage?.setItem(storageKey, JSON.stringify(state));
+  } catch {
+    // Some Pad browsers or privacy modes disable localStorage. Cloud sync remains the source of truth.
+  }
 }
