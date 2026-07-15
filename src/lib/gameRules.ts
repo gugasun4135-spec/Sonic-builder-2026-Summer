@@ -1,5 +1,5 @@
 import { defaultGameState } from "./defaultState";
-import type { GameAction, GameState, MapNode, Monster } from "./gameTypes";
+import type { GameAction, GameState, MapNode, Monster, MonsterLevel } from "./gameTypes";
 
 const taskDamage = 4;
 const dailyBonusStars = 3;
@@ -50,6 +50,7 @@ function damageMonster(monsters: Monster[], damage: number) {
     return {
       ...monster,
       hp,
+      hits: monster.hits + 1,
       defeated: hp === 0
     };
   });
@@ -168,6 +169,7 @@ function resetForNextRound(state: GameState): GameState {
         level: nextLevel,
         hp: maxHp,
         maxHp,
+        hits: 0,
         defeated: false
       };
     })
@@ -380,6 +382,22 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         )
       };
 
+    case "SET_TASK_COMPLETED":
+      return {
+        ...state,
+        tasks: state.tasks.map((task) =>
+          task.id === action.taskId ? { ...task, completed: action.completed } : task
+        )
+      };
+
+    case "SET_REWARD":
+      return {
+        ...state,
+        rewards: state.rewards.map((reward) =>
+          reward.id === action.rewardId ? { ...reward, cost: Math.max(0, action.cost), claimed: action.claimed } : reward
+        )
+      };
+
     case "SET_PROGRESS_STAT":
       return {
         ...state,
@@ -396,6 +414,39 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
           monster.id === action.monsterId
             ? { ...monster, hp: Math.max(0, action.hp), defeated: action.hp <= 0 }
             : monster
+        )
+      };
+
+    case "SET_MONSTER_MAX_HP":
+      return {
+        ...state,
+        monsters: state.monsters.map((monster) => {
+          if (monster.id !== action.monsterId) {
+            return monster;
+          }
+
+          const maxHp = Math.max(1, action.maxHp);
+          return {
+            ...monster,
+            maxHp,
+            hp: Math.min(monster.hp, maxHp)
+          };
+        })
+      };
+
+    case "SET_MONSTER_LEVEL":
+      return {
+        ...state,
+        monsters: state.monsters.map((monster) =>
+          monster.id === action.monsterId ? { ...monster, level: Math.min(5, Math.max(1, action.level)) as MonsterLevel } : monster
+        )
+      };
+
+    case "SET_MONSTER_HITS":
+      return {
+        ...state,
+        monsters: state.monsters.map((monster) =>
+          monster.id === action.monsterId ? { ...monster, hits: Math.max(0, action.hits) } : monster
         )
       };
 
@@ -421,6 +472,18 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
           ...state.progressStats,
           completedMainNodes: map.filter((node) => !node.sideQuest && node.status === "done").length
         }
+      };
+
+    case "SET_DAY_CLEARED":
+      return {
+        ...state,
+        dayCleared: action.cleared
+      };
+
+    case "SET_ROUND":
+      return {
+        ...state,
+        round: Math.max(1, action.round)
       };
 
     case "RESET_GAME":

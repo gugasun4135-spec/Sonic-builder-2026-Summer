@@ -6,26 +6,14 @@ export type CloudSyncEnvelope = {
   updatedAt: number;
 };
 
-const endpoint = process.env.NEXT_PUBLIC_BQ_SYNC_ENDPOINT?.replace(/\/$/, "");
-const token = process.env.NEXT_PUBLIC_BQ_SYNC_TOKEN;
+const syncEnabled = process.env.NEXT_PUBLIC_BQ_SYNC_ENABLED === "true";
 
 export function isCloudSyncConfigured() {
-  return Boolean(endpoint && token);
+  return syncEnabled;
 }
 
 function stateUrl() {
-  if (!endpoint) {
-    throw new Error("Cloud sync endpoint is not configured.");
-  }
-
-  return `${endpoint}/state`;
-}
-
-function headers() {
-  return {
-    Authorization: `Bearer ${token}`,
-    "Content-Type": "application/json"
-  };
+  return "/api/game-state";
 }
 
 export async function loadCloudState(): Promise<CloudSyncEnvelope | null> {
@@ -34,7 +22,6 @@ export async function loadCloudState(): Promise<CloudSyncEnvelope | null> {
   }
 
   const response = await fetch(stateUrl(), {
-    headers: headers(),
     cache: "no-store"
   });
 
@@ -70,7 +57,9 @@ export async function saveCloudState(state: GameState, updatedAt = Date.now()) {
 
   const response = await fetch(stateUrl(), {
     method: "PUT",
-    headers: headers(),
+    headers: {
+      "Content-Type": "application/json"
+    },
     body: JSON.stringify(envelope)
   });
 

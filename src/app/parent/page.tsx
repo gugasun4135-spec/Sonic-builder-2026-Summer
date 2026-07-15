@@ -5,7 +5,7 @@ import { seasonRequirements } from "@/lib/gameRules";
 import { useGame } from "@/lib/useGame";
 import { migrateGameState } from "@/lib/storage";
 import { createSyncUrl } from "@/lib/syncState";
-import type { MapNodeStatus, ProgressStats } from "@/lib/gameTypes";
+import type { MapNodeStatus, MonsterLevel, ProgressStats } from "@/lib/gameTypes";
 import { useEffect, useState, type ReactNode } from "react";
 
 type EditableProgressStat = keyof Omit<ProgressStats, "countedDates">;
@@ -157,6 +157,49 @@ export default function ParentPage() {
               NPC朗读：{state.settings.speechEnabled ? "开" : "关"}
             </button>
           </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <label className="rounded-3xl bg-slate-50 p-4 font-black">
+              难度轮次
+              <input
+                type="number"
+                min={1}
+                value={state.round}
+                onChange={(event) => dispatch({ type: "SET_ROUND", round: Number(event.target.value) })}
+                className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-lg font-black"
+              />
+            </label>
+            <button
+              type="button"
+              onClick={() => dispatch({ type: "SET_DAY_CLEARED", cleared: !state.dayCleared })}
+              className="rounded-3xl border-4 border-[#18324A] bg-[#DFF4FF] p-4 font-black"
+            >
+              今日通关：{state.dayCleared ? "是" : "否"}
+            </button>
+            <label className="rounded-3xl bg-slate-50 p-4 font-black">
+              玩家等级
+              <input
+                type="number"
+                min={1}
+                value={state.player.level}
+                onChange={(event) =>
+                  dispatch({ type: "HYDRATE", state: { ...state, player: { ...state.player, level: Number(event.target.value) } } })
+                }
+                className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-lg font-black"
+              />
+            </label>
+            <label className="rounded-3xl bg-slate-50 p-4 font-black">
+              当前星星
+              <input
+                type="number"
+                min={0}
+                value={state.player.stars}
+                onChange={(event) =>
+                  dispatch({ type: "HYDRATE", state: { ...state, player: { ...state.player, stars: Math.max(0, Number(event.target.value)) } } })
+                }
+                className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-lg font-black"
+              />
+            </label>
+          </div>
         </section>
 
         <section className="rounded-[2rem] border-4 border-[#18324A] bg-[#DFF4FF] p-5 shadow-[0_8px_0_rgba(24,50,74,0.16)]">
@@ -187,7 +230,7 @@ export default function ParentPage() {
         <Panel title="任务设置">
           <div className="grid gap-3">
             {state.tasks.map((task) => (
-              <div key={task.id} className="grid gap-2 rounded-3xl bg-slate-50 p-4 sm:grid-cols-[1fr_7rem]">
+              <div key={task.id} className="grid gap-2 rounded-3xl bg-slate-50 p-4 sm:grid-cols-[1fr_7rem_8rem]">
                 <input
                   value={task.title}
                   onChange={(event) =>
@@ -209,6 +252,46 @@ export default function ParentPage() {
                   }
                   className="rounded-2xl border border-slate-200 px-4 py-3 text-lg font-bold"
                 />
+                <button
+                  type="button"
+                  onClick={() => dispatch({ type: "SET_TASK_COMPLETED", taskId: task.id, completed: !task.completed })}
+                  className={`rounded-2xl px-4 py-3 font-black ${
+                    task.completed ? "bg-[#64C86B] text-white" : "bg-white text-[#18324A]"
+                  }`}
+                >
+                  {task.completed ? "已完成" : "未完成"}
+                </button>
+              </div>
+            ))}
+          </div>
+        </Panel>
+
+        <Panel title="奖励控制">
+          <div className="grid gap-3 sm:grid-cols-2">
+            {state.rewards.map((reward) => (
+              <div key={reward.id} className="grid gap-3 rounded-3xl bg-slate-50 p-4 sm:grid-cols-[1fr_8rem_8rem]">
+                <div>
+                  <p className="text-lg font-black">{reward.name}</p>
+                  <p className="text-sm font-bold text-slate-500">当前成本 {reward.cost} 星</p>
+                </div>
+                <input
+                  type="number"
+                  min={0}
+                  value={reward.cost}
+                  onChange={(event) =>
+                    dispatch({ type: "SET_REWARD", rewardId: reward.id, cost: Number(event.target.value), claimed: reward.claimed })
+                  }
+                  className="rounded-2xl border border-slate-200 px-4 py-3 text-lg font-bold"
+                />
+                <button
+                  type="button"
+                  onClick={() => dispatch({ type: "SET_REWARD", rewardId: reward.id, cost: reward.cost, claimed: !reward.claimed })}
+                  className={`rounded-2xl px-4 py-3 font-black ${
+                    reward.claimed ? "bg-[#64C86B] text-white" : "bg-white text-[#18324A]"
+                  }`}
+                >
+                  {reward.claimed ? "已兑换" : "未兑换"}
+                </button>
               </div>
             ))}
           </div>
@@ -282,13 +365,26 @@ export default function ParentPage() {
         <Panel title="怪兽控制">
           <div className="grid gap-3">
             {state.monsters.map((monster) => (
-              <div key={monster.id} className="grid gap-2 rounded-3xl bg-slate-50 p-4 sm:grid-cols-[1fr_8rem_8rem]">
+              <div key={monster.id} className="grid gap-2 rounded-3xl bg-slate-50 p-4 sm:grid-cols-[1fr_7rem_7rem_7rem_7rem_8rem]">
                 <div>
                   <p className="text-lg font-black">{monster.name}</p>
                   <p className="text-sm font-bold text-slate-500">
-                    HP {monster.hp}/{monster.maxHp}
+                    HP {monster.hp}/{monster.maxHp}｜击打 {monster.hits} 次
                   </p>
                 </div>
+                <select
+                  value={monster.level}
+                  onChange={(event) =>
+                    dispatch({ type: "SET_MONSTER_LEVEL", monsterId: monster.id, level: Number(event.target.value) as MonsterLevel })
+                  }
+                  className="rounded-2xl border border-slate-200 px-4 py-3 text-lg font-bold"
+                >
+                  <option value={1}>Lv.1</option>
+                  <option value={2}>Lv.2</option>
+                  <option value={3}>Lv.3</option>
+                  <option value={4}>Lv.4</option>
+                  <option value={5}>Lv.5</option>
+                </select>
                 <input
                   type="number"
                   min={0}
@@ -297,6 +393,26 @@ export default function ParentPage() {
                     dispatch({ type: "SET_MONSTER_HP", monsterId: monster.id, hp: Number(event.target.value) })
                   }
                   className="rounded-2xl border border-slate-200 px-4 py-3 text-lg font-bold"
+                />
+                <input
+                  type="number"
+                  min={1}
+                  value={monster.maxHp}
+                  onChange={(event) =>
+                    dispatch({ type: "SET_MONSTER_MAX_HP", monsterId: monster.id, maxHp: Number(event.target.value) })
+                  }
+                  className="rounded-2xl border border-slate-200 px-4 py-3 text-lg font-bold"
+                  aria-label={`${monster.name} 最大HP`}
+                />
+                <input
+                  type="number"
+                  min={0}
+                  value={monster.hits}
+                  onChange={(event) =>
+                    dispatch({ type: "SET_MONSTER_HITS", monsterId: monster.id, hits: Number(event.target.value) })
+                  }
+                  className="rounded-2xl border border-slate-200 px-4 py-3 text-lg font-bold"
+                  aria-label={`${monster.name} 击打次数`}
                 />
                 <button
                   type="button"

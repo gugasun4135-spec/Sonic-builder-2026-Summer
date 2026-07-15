@@ -38,10 +38,10 @@ export const defaultGameState: GameState = {
     { id: "z12-watch", name: "赛季大奖：Builder Watch Z12｜终极通讯装备", cost: 100, claimed: false, seasonPrize: true }
   ],
   monsters: [
-    { id: "delay", name: "拖拖怪", skill: "3分钟启动", level: 1, hp: 16, maxHp: 16, defeated: false },
-    { id: "focus", name: "分心怪", skill: "看任务卡", level: 1, hp: 18, maxHp: 18, defeated: false },
-    { id: "mess", name: "乱乱怪", skill: "3分钟复位", level: 1, hp: 20, maxHp: 20, defeated: false },
-    { id: "rush", name: "急急怪", skill: "暂停喝水", level: 1, hp: 22, maxHp: 22, defeated: false },
+    { id: "delay", name: "拖拖怪", skill: "3分钟启动", level: 1, hp: 16, maxHp: 16, hits: 0, defeated: false },
+    { id: "focus", name: "分心怪", skill: "看任务卡", level: 1, hp: 18, maxHp: 18, hits: 0, defeated: false },
+    { id: "mess", name: "乱乱怪", skill: "3分钟复位", level: 1, hp: 20, maxHp: 20, hits: 0, defeated: false },
+    { id: "rush", name: "急急怪", skill: "暂停喝水", level: 1, hp: 22, maxHp: 22, hits: 0, defeated: false },
     {
       id: "boss",
       name: "四怪合体Boss：混乱大魔王",
@@ -49,6 +49,7 @@ export const defaultGameState: GameState = {
       level: 1,
       hp: 36,
       maxHp: 36,
+      hits: 0,
       defeated: false,
       boss: true
     }

@@ -37,6 +37,7 @@ export type Monster = {
   level: MonsterLevel;
   hp: number;
   maxHp: number;
+  hits: number;
   defeated: boolean;
   boss?: boolean;
 };
@@ -121,8 +122,15 @@ export type GameAction =
   | { type: "TOGGLE_REVIVE_CARD" }
   | { type: "TOGGLE_BREAKDOWN_CARD" }
   | { type: "SET_TASK"; taskId: string; title: string; stars: number }
+  | { type: "SET_TASK_COMPLETED"; taskId: string; completed: boolean }
+  | { type: "SET_REWARD"; rewardId: string; cost: number; claimed: boolean }
   | { type: "SET_PROGRESS_STAT"; stat: keyof Omit<ProgressStats, "countedDates">; value: number }
   | { type: "SET_MONSTER_HP"; monsterId: string; hp: number }
+  | { type: "SET_MONSTER_MAX_HP"; monsterId: string; maxHp: number }
+  | { type: "SET_MONSTER_LEVEL"; monsterId: string; level: MonsterLevel }
+  | { type: "SET_MONSTER_HITS"; monsterId: string; hits: number }
   | { type: "SET_MONSTER_DEFEATED"; monsterId: string; defeated: boolean }
   | { type: "SET_MAP_NODE_STATUS"; nodeId: string; status: MapNodeStatus }
+  | { type: "SET_DAY_CLEARED"; cleared: boolean }
+  | { type: "SET_ROUND"; round: number }
   | { type: "RESET_GAME" };
