@@ -4,6 +4,8 @@ import type { GameState } from "./gameTypes";
 export type CloudSyncEnvelope = {
   state: GameState;
   updatedAt: number;
+  revision?: number;
+  conflict?: boolean;
 };
 
 const syncEnabled = process.env.NEXT_PUBLIC_BQ_SYNC_ENABLED === "true";
@@ -41,18 +43,21 @@ export async function loadCloudState(): Promise<CloudSyncEnvelope | null> {
 
   return {
     state: migrateGameState(data.state),
-    updatedAt: data.updatedAt
+    updatedAt: data.updatedAt,
+    revision: data.revision,
+    conflict: data.conflict
   };
 }
 
-export async function saveCloudState(state: GameState, updatedAt = Date.now()) {
+export async function saveCloudState(state: GameState, updatedAt = Date.now(), revision?: number) {
   if (!isCloudSyncConfigured()) {
     return null;
   }
 
   const envelope: CloudSyncEnvelope = {
     state,
-    updatedAt
+    updatedAt,
+    revision
   };
 
   const response = await fetch(stateUrl(), {
@@ -63,9 +68,20 @@ export async function saveCloudState(state: GameState, updatedAt = Date.now()) {
     body: JSON.stringify(envelope)
   });
 
-  if (!response.ok) {
+  if (!response.ok && response.status !== 409) {
     throw new Error("Failed to save cloud game state.");
   }
 
-  return envelope;
+  const data = (await response.json()) as Partial<CloudSyncEnvelope>;
+
+  if (!data.state || typeof data.updatedAt !== "number") {
+    return envelope;
+  }
+
+  return {
+    state: migrateGameState(data.state),
+    updatedAt: data.updatedAt,
+    revision: data.revision,
+    conflict: data.conflict
+  };
 }

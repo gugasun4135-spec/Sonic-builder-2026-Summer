@@ -17,6 +17,7 @@ type GameStateEnvelope = {
   state: GameState;
   updatedAt: number;
   revision?: number;
+  conflict?: boolean;
 };
 
 const gameStateId = process.env.BQ_GAME_STATE_ID || "zhenyu-main";
@@ -51,6 +52,13 @@ function rowToEnvelope(row: SupabaseGameRow): GameStateEnvelope {
     state: migrateGameState(row.state),
     updatedAt: new Date(row.updated_at).getTime(),
     revision: row.revision
+  };
+}
+
+function rowToConflictEnvelope(row: SupabaseGameRow): GameStateEnvelope {
+  return {
+    ...rowToEnvelope(row),
+    conflict: true
   };
 }
 
@@ -146,6 +154,11 @@ export async function PUT(request: Request) {
     }
 
     const current = await fetchGameRow();
+
+    if (current && typeof body.revision === "number" && body.revision !== current.revision) {
+      return NextResponse.json(rowToConflictEnvelope(current), { status: 409 });
+    }
+
     const revision = (current?.revision ?? 0) + 1;
     const row = await upsertGameState(migrateGameState(body.state), revision);
 

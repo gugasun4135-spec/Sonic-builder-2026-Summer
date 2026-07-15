@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useReducer, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useReducer, useRef, useState } from "react";
 import type { Dispatch, ReactNode } from "react";
 import { defaultGameState } from "./defaultState";
 import { gameReducer } from "./gameRules";
@@ -21,17 +21,26 @@ type GameContextValue = {
 const GameContext = createContext<GameContextValue | null>(null);
 
 export function GameProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(gameReducer, defaultGameState);
+  const [state, reducerDispatch] = useReducer(gameReducer, defaultGameState);
   const [ready, setReady] = useState(false);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>(isCloudSyncConfigured() ? "loading" : "local");
   const cloudReadyRef = useRef(false);
   const lastCloudUpdatedAtRef = useRef(0);
+  const lastCloudRevisionRef = useRef<number | undefined>(undefined);
+  const localDirtyRef = useRef(false);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dispatch = useCallback<Dispatch<GameAction>>((action) => {
+    if (action.type !== "HYDRATE") {
+      localDirtyRef.current = true;
+    }
+
+    reducerDispatch(action);
+  }, []);
 
   useEffect(() => {
     const syncedState = readSyncStateFromUrl();
     const saved = syncedState ?? loadGameState();
-    dispatch({ type: "HYDRATE", state: saved });
+    reducerDispatch({ type: "HYDRATE", state: saved });
     if (syncedState) {
       clearSyncUrl();
     }
@@ -45,11 +54,16 @@ export function GameProvider({ children }: { children: ReactNode }) {
       .then((cloudState) => {
         if (cloudState) {
           lastCloudUpdatedAtRef.current = cloudState.updatedAt;
-          dispatch({ type: "HYDRATE", state: cloudState.state });
+          lastCloudRevisionRef.current = cloudState.revision;
+          reducerDispatch({ type: "HYDRATE", state: cloudState.state });
         } else {
           const now = Date.now();
           lastCloudUpdatedAtRef.current = now;
-          void saveCloudState(saved, now);
+          void saveCloudState(saved, now, lastCloudRevisionRef.current).then((created) => {
+            if (created?.revision) {
+              lastCloudRevisionRef.current = created.revision;
+            }
+          });
         }
         cloudReadyRef.current = true;
         setSyncStatus("synced");
@@ -67,7 +81,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }, [ready, state]);
 
   useEffect(() => {
-    if (!ready || !isCloudSyncConfigured() || !cloudReadyRef.current) {
+    if (!ready || !isCloudSyncConfigured() || !cloudReadyRef.current || !localDirtyRef.current) {
       return;
     }
 
@@ -77,9 +91,21 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
     saveTimerRef.current = setTimeout(() => {
       const updatedAt = Date.now();
-      void saveCloudState(state, updatedAt)
-        .then(() => {
-          lastCloudUpdatedAtRef.current = updatedAt;
+      const revision = lastCloudRevisionRef.current;
+      void saveCloudState(state, updatedAt, revision)
+        .then((saved) => {
+          if (saved?.conflict) {
+            localDirtyRef.current = false;
+            lastCloudUpdatedAtRef.current = saved.updatedAt;
+            lastCloudRevisionRef.current = saved.revision;
+            reducerDispatch({ type: "HYDRATE", state: saved.state });
+            setSyncStatus("synced");
+            return;
+          }
+
+          localDirtyRef.current = false;
+          lastCloudUpdatedAtRef.current = saved?.updatedAt ?? updatedAt;
+          lastCloudRevisionRef.current = saved?.revision ?? lastCloudRevisionRef.current;
           setSyncStatus("synced");
         })
         .catch(() => setSyncStatus("error"));
@@ -104,9 +130,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
       void loadCloudState()
         .then((cloudState) => {
-          if (cloudState && cloudState.updatedAt > lastCloudUpdatedAtRef.current) {
+          if (cloudState && cloudState.updatedAt > lastCloudUpdatedAtRef.current && !localDirtyRef.current) {
             lastCloudUpdatedAtRef.current = cloudState.updatedAt;
-            dispatch({ type: "HYDRATE", state: cloudState.state });
+            lastCloudRevisionRef.current = cloudState.revision;
+            reducerDispatch({ type: "HYDRATE", state: cloudState.state });
           }
           setSyncStatus("synced");
         })
