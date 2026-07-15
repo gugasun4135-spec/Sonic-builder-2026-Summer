@@ -3,7 +3,7 @@
 import { getNpcLine } from "@/lib/npcLines";
 import type { GameState, HelperId, NpcScene, NpcState } from "@/lib/gameTypes";
 import { withBasePath } from "@/lib/paths";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { useSound } from "@/lib/useSound";
 import { useGame } from "@/lib/useGame";
@@ -159,11 +159,34 @@ function NpcAvatar({
   small?: boolean;
 }) {
   const isScrew = npc === "screw";
-  const src = isScrew ? withBasePath("/assets/npcs/screw-default.png") : withBasePath("/assets/npcs/nut-default.png");
+  const [imageFailed, setImageFailed] = useState(false);
+  const src = isScrew
+    ? withBasePath("/assets/npcs/screw-default.png?v=npc-20260715")
+    : withBasePath("/assets/npcs/nut-default.png?v=npc-20260715");
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [npc, src]);
 
   return (
     <div className={`npc-avatar-img-wrap ${small ? "npc-avatar-img-small" : ""} ${expression === "celebrate" ? "star-pop" : ""}`}>
-      <img className="npc-avatar-img" src={src} alt={isScrew ? "小螺丝 Coach Bolt" : "小螺母 Coach Nut"} />
+      {imageFailed ? (
+        <div className={`npc-avatar-fallback ${isScrew ? "npc-avatar-fallback-blue" : "npc-avatar-fallback-green"}`}>
+          <span>{isScrew ? "小螺丝" : "小螺母"}</span>
+        </div>
+      ) : (
+        <img
+          key={`${npc}-${src}`}
+          className="npc-avatar-img"
+          src={src}
+          alt={isScrew ? "小螺丝 Coach Bolt" : "小螺母 Coach Nut"}
+          width={isScrew ? 432 : 431}
+          height={520}
+          decoding="async"
+          loading={small ? "lazy" : "eager"}
+          onError={() => setImageFailed(true)}
+        />
+      )}
     </div>
   );
 }

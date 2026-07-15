@@ -166,8 +166,39 @@ select {
   filter: drop-shadow(0 10px 0 rgba(24, 50, 74, 0.12));
 }
 
+.npc-avatar-fallback {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 9.5rem;
+  max-width: 100%;
+  aspect-ratio: 0.82;
+  place-items: center;
+  border: 4px solid #18324a;
+  border-radius: 2rem;
+  color: white;
+  font-size: 1.35rem;
+  font-weight: 900;
+  text-align: center;
+  box-shadow: 0 8px 0 rgba(24, 50, 74, 0.16);
+}
+
+.npc-avatar-fallback-blue {
+  background: linear-gradient(180deg, #5ec8ff, #1167d8);
+}
+
+.npc-avatar-fallback-green {
+  background: linear-gradient(180deg, #7fe5dc, #0e8d84);
+}
+
 .npc-avatar-img-small .npc-avatar-img {
   max-height: 7rem;
+}
+
+.npc-avatar-img-small .npc-avatar-fallback {
+  width: 5.8rem;
+  border-radius: 1.35rem;
+  font-size: 0.95rem;
 }
 
 .npc-avatar-small {
