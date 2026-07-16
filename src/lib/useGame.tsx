@@ -9,7 +9,13 @@ import { clearSyncUrl, readSyncStateFromUrl } from "./syncState";
 import { isCloudSyncConfigured, loadCloudState, saveCloudState } from "./cloudSync";
 import type { GameAction, GameState } from "./gameTypes";
 
-type SyncStatus = "local" | "loading" | "synced" | "error";
+export type SyncStatus = {
+  source: "local" | "cloud";
+  online: boolean;
+  loading: boolean;
+  lastSyncedAt?: string;
+  lastError?: string;
+};
 
 type GameContextValue = {
   state: GameState;
@@ -20,10 +26,41 @@ type GameContextValue = {
 
 const GameContext = createContext<GameContextValue | null>(null);
 
+function createInitialSyncStatus(): SyncStatus {
+  return {
+    source: isCloudSyncConfigured() ? "cloud" : "local",
+    online: false,
+    loading: isCloudSyncConfigured(),
+    lastError: isCloudSyncConfigured() ? undefined : "云同步未配置，当前使用本地数据。"
+  };
+}
+
+function toErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : "云端同步失败。";
+}
+
+function syncedStatus(updatedAt = Date.now()): SyncStatus {
+  return {
+    source: "cloud",
+    online: true,
+    loading: false,
+    lastSyncedAt: new Date(updatedAt).toISOString()
+  };
+}
+
+function errorStatus(error: unknown): SyncStatus {
+  return {
+    source: isCloudSyncConfigured() ? "cloud" : "local",
+    online: false,
+    loading: false,
+    lastError: toErrorMessage(error)
+  };
+}
+
 export function GameProvider({ children }: { children: ReactNode }) {
   const [state, reducerDispatch] = useReducer(gameReducer, defaultGameState);
   const [ready, setReady] = useState(false);
-  const [syncStatus, setSyncStatus] = useState<SyncStatus>(isCloudSyncConfigured() ? "loading" : "local");
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>(() => createInitialSyncStatus());
   const cloudReadyRef = useRef(false);
   const lastCloudUpdatedAtRef = useRef(0);
   const lastCloudRevisionRef = useRef<number | undefined>(undefined);
@@ -50,6 +87,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    setSyncStatus((current) => ({ ...current, loading: true, lastError: undefined }));
+
     void loadCloudState()
       .then((cloudState) => {
         if (cloudState) {
@@ -66,11 +105,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
           });
         }
         cloudReadyRef.current = true;
-        setSyncStatus("synced");
+        setSyncStatus(syncedStatus(lastCloudUpdatedAtRef.current || Date.now()));
       })
-      .catch(() => {
+      .catch((error) => {
         cloudReadyRef.current = true;
-        setSyncStatus("error");
+        setSyncStatus(errorStatus(error));
       });
   }, []);
 
@@ -92,6 +131,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     saveTimerRef.current = setTimeout(() => {
       const updatedAt = Date.now();
       const revision = lastCloudRevisionRef.current;
+      setSyncStatus((current) => ({ ...current, loading: true, lastError: undefined }));
       void saveCloudState(state, updatedAt, revision)
         .then((saved) => {
           if (saved?.conflict) {
@@ -99,16 +139,16 @@ export function GameProvider({ children }: { children: ReactNode }) {
             lastCloudUpdatedAtRef.current = saved.updatedAt;
             lastCloudRevisionRef.current = saved.revision;
             reducerDispatch({ type: "HYDRATE", state: saved.state });
-            setSyncStatus("synced");
+            setSyncStatus(syncedStatus(saved.updatedAt));
             return;
           }
 
           localDirtyRef.current = false;
           lastCloudUpdatedAtRef.current = saved?.updatedAt ?? updatedAt;
           lastCloudRevisionRef.current = saved?.revision ?? lastCloudRevisionRef.current;
-          setSyncStatus("synced");
+          setSyncStatus(syncedStatus(lastCloudUpdatedAtRef.current));
         })
-        .catch(() => setSyncStatus("error"));
+        .catch((error) => setSyncStatus(errorStatus(error)));
     }, 800);
 
     return () => {
@@ -135,9 +175,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
             lastCloudRevisionRef.current = cloudState.revision;
             reducerDispatch({ type: "HYDRATE", state: cloudState.state });
           }
-          setSyncStatus("synced");
+          setSyncStatus(syncedStatus(cloudState?.updatedAt ?? (lastCloudUpdatedAtRef.current || Date.now())));
         })
-        .catch(() => setSyncStatus("error"));
+        .catch((error) => setSyncStatus(errorStatus(error)));
     }, 8000);
 
     return () => window.clearInterval(interval);

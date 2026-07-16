@@ -69,7 +69,7 @@ async function fetchCurrentRow() {
   );
 
   if (!response.ok) {
-    throw new Error("Failed to load cloud game state.");
+    throw new Error(`云端读取失败：${response.status} ${response.statusText}`);
   }
 
   const rows = (await response.json()) as GameStateRow[];
@@ -122,7 +122,7 @@ export async function saveCloudState(state: GameState, updatedAt = Date.now(), r
   );
 
   if (!patchResponse.ok) {
-    throw new Error("Failed to save cloud game state.");
+    throw new Error(`云端保存失败：${patchResponse.status} ${patchResponse.statusText}`);
   }
 
   const patchedRows = (await patchResponse.json()) as GameStateRow[];
@@ -157,7 +157,7 @@ export async function saveCloudState(state: GameState, updatedAt = Date.now(), r
   });
 
   if (!createResponse.ok) {
-    throw new Error("Failed to save cloud game state.");
+    throw new Error(`云端创建失败：${createResponse.status} ${createResponse.statusText}`);
   }
 
   const createdRows = (await createResponse.json()) as GameStateRow[];

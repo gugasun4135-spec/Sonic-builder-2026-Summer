@@ -7,6 +7,7 @@ import { MonsterCard } from "@/components/MonsterCard";
 import { NpcGuide } from "@/components/NpcGuide";
 import { RewardCard } from "@/components/RewardCard";
 import { SeasonProgress } from "@/components/SeasonProgress";
+import { SyncStatusBadge } from "@/components/SyncStatusBadge";
 import { TaskCard } from "@/components/TaskCard";
 import { ToolPanel } from "@/components/ToolPanel";
 import { useSound } from "@/lib/useSound";
@@ -31,7 +32,7 @@ function getTodayQuests(map: MapNode[]) {
 }
 
 export default function HomePage() {
-  const { state, dispatch } = useGame();
+  const { state, dispatch, syncStatus } = useGame();
   const { play } = useSound();
   const smallMonsters = state.monsters.filter((monster) => !monster.boss);
   const boss = state.monsters.find((monster) => monster.boss);
@@ -57,6 +58,7 @@ export default function HomePage() {
         </div>
 
         <NpcGuide state={state} scene="home" />
+        <SyncStatusBadge status={syncStatus} />
         <DayModeSelector state={state} onSelect={(mode) => dispatch({ type: "SET_DAY_MODE", mode })} />
         <SeasonProgress state={state} />
 

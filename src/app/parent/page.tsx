@@ -1,6 +1,7 @@
 "use client";
 
 import { AppShell } from "@/components/AppShell";
+import { SyncStatusBadge } from "@/components/SyncStatusBadge";
 import { seasonRequirements } from "@/lib/gameRules";
 import { useGame } from "@/lib/useGame";
 import { migrateGameState } from "@/lib/storage";
@@ -84,9 +85,11 @@ export default function ParentPage() {
           <p className="text-sm font-black text-[#FFD84D]">家长模式</p>
           <h1 className="text-3xl font-black sm:text-5xl">控制台</h1>
           <p className="mt-2 text-lg font-black text-white/90">
-            当前星星：{state.player.stars}｜同步状态：{syncStatus === "synced" ? "云端已同步" : syncStatus === "loading" ? "正在同步" : syncStatus === "error" ? "云端异常" : "本地模式"}
+            当前星星：{state.player.stars}
           </p>
         </div>
+
+        <SyncStatusBadge status={syncStatus} detailed />
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[1, 5, -1, -5].map((amount) => (
