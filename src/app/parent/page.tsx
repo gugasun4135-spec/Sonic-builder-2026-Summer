@@ -23,6 +23,14 @@ const editableProgressStats: Array<{
     target: item.target
   }));
 
+const mapStatusOptions: Array<{ value: MapNodeStatus; label: string }> = [
+  { value: "locked", label: "未解锁" },
+  { value: "active", label: "进行中" },
+  { value: "submitted", label: "等待确认" },
+  { value: "done", label: "已完成" },
+  { value: "ongoing", label: "长期支线" }
+];
+
 export default function ParentPage() {
   const { state, dispatch, syncStatus } = useGame();
   const [syncUrl, setSyncUrl] = useState("");
@@ -434,25 +442,31 @@ export default function ParentPage() {
         <Panel title="地图控制">
           <div className="grid gap-3">
             {state.map.map((node) => (
-              <div key={node.id} className="grid gap-2 rounded-3xl bg-slate-50 p-4 sm:grid-cols-[1fr_10rem]">
-                <p className="text-lg font-black">{node.name}</p>
-                <select
-                  value={node.status}
-                  onChange={(event) =>
-                    dispatch({
-                      type: "SET_MAP_NODE_STATUS",
-                      nodeId: node.id,
-                      status: event.target.value as MapNodeStatus
-                    })
-                  }
-                  className="rounded-2xl border border-slate-200 px-4 py-3 text-lg font-bold"
-                >
-                  <option value="locked">未解锁</option>
-                  <option value="active">进行中</option>
-                  <option value="submitted">等待确认</option>
-                  <option value="done">已完成</option>
-                  <option value="ongoing">长期支线</option>
-                </select>
+              <div key={node.id} className="grid gap-3 rounded-3xl bg-slate-50 p-4">
+                <div>
+                  <p className="text-lg font-black">{node.name}</p>
+                  <p className="text-sm font-bold text-slate-500">{node.subtitle}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+                  {mapStatusOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() =>
+                        dispatch({
+                          type: "SET_MAP_NODE_STATUS",
+                          nodeId: node.id,
+                          status: option.value
+                        })
+                      }
+                      className={`rounded-2xl border-4 border-[#18324A] px-3 py-3 text-sm font-black ${
+                        node.status === option.value ? "bg-[#FFD84D] text-[#18324A]" : "bg-white text-[#18324A]"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
                 {node.status === "submitted" ? (
                   <button
                     type="button"

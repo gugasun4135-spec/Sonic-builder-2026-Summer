@@ -78,7 +78,7 @@ export const defaultGameState: GameState = {
       name: "普吉英语冒险岛",
       subtitle: "7.25-7.31｜用英语探索世界",
       date: "7.25-7.31",
-      status: "locked",
+      status: "done",
       icon: "island"
     },
     {
@@ -87,7 +87,7 @@ export const defaultGameState: GameState = {
       name: "VEX机器人工厂",
       subtitle: "8.1 / 8.4-8.9｜升级建造力",
       date: "8.1 / 8.4-8.9",
-      status: "locked",
+      status: "done",
       icon: "robot"
     },
     {
@@ -96,7 +96,7 @@ export const defaultGameState: GameState = {
       name: "跆拳道能量塔",
       subtitle: "8.10-8.23｜练体能，准备考级",
       date: "8.10-8.23",
-      status: "locked",
+      status: "active",
       icon: "taekwondo"
     },
     {
@@ -105,15 +105,15 @@ export const defaultGameState: GameState = {
       name: "果岭挥杆挑战营",
       subtitle: "8.17-8.21｜高尔夫训练挑战",
       date: "8.17-8.21",
-      status: "locked",
+      status: "active",
       icon: "golf"
     },
     {
       id: "beijing-explore",
       order: 7,
       name: "北京城市探索篇",
-      subtitle: "8.24-8.26｜发现城市和历史",
-      date: "8.24-8.26",
+      subtitle: "8.21-8.27｜发现城市和历史",
+      date: "8.21-8.27",
       status: "locked",
       icon: "beijing"
     },
