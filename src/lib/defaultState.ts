@@ -82,17 +82,8 @@ export const defaultGameState: GameState = {
       icon: "island"
     },
     {
-      id: "vex-factory",
-      order: 4,
-      name: "VEX机器人工厂",
-      subtitle: "8.1 / 8.4-8.9｜升级建造力",
-      date: "8.1 / 8.4-8.9",
-      status: "done",
-      icon: "robot"
-    },
-    {
       id: "taekwondo-tower",
-      order: 5,
+      order: 4,
       name: "跆拳道能量塔",
       subtitle: "8.10-8.23｜练体能，准备考级",
       date: "8.10-8.23",
@@ -101,7 +92,7 @@ export const defaultGameState: GameState = {
     },
     {
       id: "golf-camp",
-      order: 6,
+      order: 5,
       name: "果岭挥杆挑战营",
       subtitle: "8.17-8.21｜高尔夫训练挑战",
       date: "8.17-8.21",
@@ -110,7 +101,7 @@ export const defaultGameState: GameState = {
     },
     {
       id: "beijing-explore",
-      order: 7,
+      order: 6,
       name: "北京城市探索篇",
       subtitle: "8.21-8.27｜发现城市和历史",
       date: "8.21-8.27",

@@ -41,7 +41,6 @@ function parseSummerDate(value: string) {
 function scheduleStatus(nodeId: string, now = new Date()): MapNodeStatus | null {
   const schedules: Record<string, { start: string; end: string }> = {
     "phuket-english": { start: "7.25", end: "7.31" },
-    "vex-factory": { start: "8.1", end: "8.9" },
     "taekwondo-tower": { start: "8.10", end: "8.23" },
     "golf-camp": { start: "8.17", end: "8.21" },
     "beijing-explore": { start: "8.21", end: "8.27" }

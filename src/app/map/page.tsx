@@ -55,7 +55,7 @@ export default function MapPage() {
               START
             </span>
             <span className="rounded-full border-4 border-[#18324A] bg-white px-4 py-2 text-sm font-black text-[#18324A]">
-              主线 7 站
+              主线 6 站
             </span>
           </div>
 
